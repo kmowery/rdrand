@@ -10,7 +10,7 @@
 #endif
 
 int cpu_supports_rdrand() {
-  uint32_t eax, ebx, ecx, edx;
+  uint32_t eax=0, ebx=0, ecx=0, edx=0;
   __get_cpuid(1, &eax, &ebx, &ecx, &edx);
   return ecx & bit_RDRAND;
 }
@@ -21,22 +21,21 @@ int rdrand_fill_array(uint64_t* array, int size) {
   uint64_t temp = 0;
 
   __asm volatile(
-      "top_of_rdrand_loop:"
-      // "jump if ecx == 0"
-      "jecxz end_of_rdrand_loop ;"
+      "top_of_rdrand_loop%=:"
+      "jecxz end_of_rdrand_loop%= ;\n"   // jump if ecx (size) == 0
 
-      "rdrand %1 ;"
-      "adc $0, %0 ;"
+      "rdrand %1 ;\n"                    // Generate random value
+      "adc $0, %0 ;\n"                   // Check if successul
 
-      "mov %1, (%4) ; "
-      "add $8, %4 ; "
+      "mov %1, (%2) ;\n "                // Store value in array
+      "add $8, %2 ;\n "                  // Move array to next spot
 
-      "dec %3 ;"
-      "jmp top_of_rdrand_loop ;"
+      "dec %4 ;\n"                       // Decrement size
+      "jmp top_of_rdrand_loop%= ;\n"
 
-      "end_of_rdrand_loop:"
-    : "=r" (successes), "=r" (temp)
-    : "0" (successes), "c" (size), "r"(array)
+      "end_of_rdrand_loop%=:\n"
+    : "=r" (successes), "=r" (temp), "=r"(array)
+    : "0" (successes), "c" (size), "2"(array)
     );
 
   return (int)successes;
