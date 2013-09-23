@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include "cpuid.h"
 
+#include <argp.h>
+
+#include "arguments.h"
+
 #ifndef bit_RDRAND
 #define bit_RDRAND 0x40000000
 #endif
@@ -42,20 +46,37 @@ int rdrand_fill_array(uint64_t* array, int size) {
 }
 
 int main(int argc, char** argv) {
+  struct arguments arguments;
+  arguments.block_count = 16;
+
+  argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
   if(!cpu_supports_rdrand()) {
     printf("Error: Your CPU does not support RDRAND.\n");
     exit(1);
   }
 
   int size = 0;
-  uint64_t array[16];
+  int blocks_left = arguments.block_count;
+  int round_size = 0;
+#define MAX_ROUND_SIZE 16
+  uint64_t array[MAX_ROUND_SIZE];
 
-  size = rdrand_fill_array(array, 16);
+  while(blocks_left > 0) {
+    round_size = (blocks_left > MAX_ROUND_SIZE) ? MAX_ROUND_SIZE : blocks_left;
 
-  printf("rdrand successful: %d\n", size);
+    size = rdrand_fill_array(array, round_size);
 
-  for(int i = 0; i < size; i++) {
-    printf("%" PRIx64 "\n", array[i]);
+    if(size != round_size) {
+      printf("rdrand round unsuccessful: %d != %d!\n", size, round_size);
+    } else {
+      printf("rdrand successful: %d\n", size);
+
+      for(int i = 0; i < size; i++) {
+        printf("%" PRIx64 "\n", array[i]);
+      }
+      blocks_left -= round_size;
+    }
   }
 
   return 0;
