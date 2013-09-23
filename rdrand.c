@@ -48,6 +48,8 @@ int rdrand_fill_array(uint64_t* array, int size) {
 int main(int argc, char** argv) {
   struct arguments arguments;
   arguments.block_count = 16;
+  arguments.block_count_set = 0;
+  arguments.output_file = NULL;
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
@@ -56,27 +58,39 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  int size = 0;
+  FILE* out = NULL;
+  if(arguments.output_file) {
+    out = fopen(arguments.output_file, "w+");
+  }
+
+  int blocks = 0;
   int blocks_left = arguments.block_count;
-  int round_size = 0;
-#define MAX_ROUND_SIZE 16
-  uint64_t array[MAX_ROUND_SIZE];
+  int round_blocks = 0;
+#define MAX_round_blocks 16
+  uint64_t array[MAX_round_blocks];
 
   while(blocks_left > 0) {
-    round_size = (blocks_left > MAX_ROUND_SIZE) ? MAX_ROUND_SIZE : blocks_left;
+    round_blocks = (blocks_left > MAX_round_blocks) ? MAX_round_blocks : blocks_left;
 
-    size = rdrand_fill_array(array, round_size);
+    blocks = rdrand_fill_array(array, round_blocks);
 
-    if(size != round_size) {
-      printf("rdrand round unsuccessful: %d != %d!\n", size, round_size);
+    if(blocks != round_blocks) {
+      printf("rdrand round unsuccessful: %d != %d!\n", blocks, round_blocks);
     } else {
-      printf("rdrand successful: %d\n", size);
-
-      for(int i = 0; i < size; i++) {
-        printf("%" PRIx64 "\n", array[i]);
+      if(out) {
+        fwrite(array, sizeof(uint64_t), blocks, out);
+      } else {
+        printf("rdrand successful: %d\n", blocks);
+        for(int i = 0; i <blocks; i++) {
+          printf("%" PRIx64 "\n", array[i]);
+        }
       }
-      blocks_left -= round_size;
+      blocks_left -= round_blocks;
     }
+  }
+
+  if(out) {
+    fclose(out);
   }
 
   return 0;
