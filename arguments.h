@@ -16,7 +16,7 @@ static char args_doc[] = "";
 
 static struct argp_option options[] = {
   {"blocks",     'b', "BLOCKS",      0,  "Generate N 64-bit blocks of randomness" },
-  {"size",       's', "BYTES",       0,  "Generate N bytes of randomness. Must be an integer multiple of 8 bytes (64 bits)." },
+  {"size",       's', "BYTES",       0,  "Generate N bytes of randomness. Must be an integer multiple of 8 bytes (64 bits). Accepts k, m, g, and t suffixes (2^x)." },
   {"output",     'o', "FILE", 0,
     "Output to FILE. Can specify multiple times; each file will receive B blocks of randomness." },
   { 0 }
