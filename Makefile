@@ -1,6 +1,7 @@
 CC := gcc
 STRIP := strip
 CFLAGS := -O3 -std=gnu99 -Wall -Werror
+LDFLAGS := -largp
 
 progs := rdrand
 deps  :=$(progs:=_deps)
@@ -32,7 +33,7 @@ assembly: $(asms)
 	$(CC) -c -o $@ $(CFLAGS) $<
 
 ${progs}:
-	$(CC) ${CFLAGS} -o $@ $+
+	$(CC) ${CFLAGS} -o $@ $+ ${LDFLAGS}
 
 clean:
 	$(RM) -r $(foreach dep,$(deps),$($(dep))) $(foreach asm,$(asms),$($(asm))) $(progs)
