@@ -17,6 +17,7 @@ static char args_doc[] = "";
 static struct argp_option options[] = {
   {"blocks",     'b', "BLOCKS",      0,  "Generate N 64-bit blocks of randomness" },
   {"size",       's', "BYTES",       0,  "Generate N bytes of randomness. Must be an integer multiple of 8 bytes (64 bits). Accepts k, m, g, and t suffixes (2^x)." },
+  {"core",       'c', "CORE",        0,  "Set processor core affinity to this core" },
   {"output",     'o', "FILE", 0,
     "Output to FILE. Can specify multiple times; each file will receive B blocks of randomness." },
   { 0 }
@@ -28,6 +29,7 @@ struct arguments
 {
   uint64_t block_count; // number of 64-bit blocks to output
   int block_count_set;
+  uint32_t core;
   char *output_file;
 };
 
@@ -45,6 +47,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
       }
       arguments->block_count = atoi(arg);
       arguments->block_count_set = 1;
+      break;
+    case 'c':
+      arguments->core = atoi(arg);
       break;
     case 's':
       if(arguments->block_count_set) {

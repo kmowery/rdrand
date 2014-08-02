@@ -1,8 +1,10 @@
 #define __STDC_FORMAT_MACROS
+#define _GNU_SOURCE
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sched.h>
 #include "cpuid.h"
 
 #include <argp.h>
@@ -49,6 +51,7 @@ int main(int argc, char** argv) {
   struct arguments arguments;
   arguments.block_count = 16;
   arguments.block_count_set = 0;
+  arguments.core = -1;
   arguments.output_file = NULL;
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
@@ -56,6 +59,24 @@ int main(int argc, char** argv) {
   if(!cpu_supports_rdrand()) {
     printf("Error: Your CPU does not support RDRAND.\n");
     exit(1);
+  }
+
+  if(arguments.core != -1) {
+    cpu_set_t  mask;
+    CPU_ZERO(&mask);
+    CPU_SET(arguments.core, &mask);
+    if(sched_setaffinity(0, sizeof(mask), &mask) == 0) {
+      printf("Processor affinity set to %d.\n", arguments.core);
+    } else {
+      printf("Core affinity setting failed: ");
+      switch(errno) {
+        case EFAULT: printf("EFAULT"); break;
+        case EINVAL: printf("processor %d doesn't exist", arguments.core); break;
+        case EPERM : printf("insufficient permissions"); break;
+        default : printf("unknown");
+      }
+      printf("\n");
+    }
   }
 
   FILE* out = NULL;
