@@ -61,6 +61,10 @@ int main(int argc, char** argv) {
   FILE* out = NULL;
   if(arguments.output_file) {
     out = fopen(arguments.output_file, "w+");
+    if(!out) {
+      printf("Error opening file '%s', terminating early.\n", arguments.output_file);
+      exit(1);
+    }
   }
 
   int blocks = 0;
