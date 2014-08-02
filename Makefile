@@ -1,7 +1,7 @@
 CC := gcc
 STRIP := strip
 CFLAGS := -O3 -std=gnu99 -Wall -Werror
-LDFLAGS := -largp
+LDFLAGS :=
 
 progs := rdrand
 deps  :=$(progs:=_deps)
